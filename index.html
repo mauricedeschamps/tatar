@@ -192,13 +192,6 @@
             color: var(--primary);
         }
 
-        .audio-icon {
-            cursor: pointer;
-            margin-left: 0.6rem;
-            font-size: 1.2rem;
-            color: var(--success);
-        }
-
         .pronoun-grid {
             display: flex;
             flex-wrap: wrap;
@@ -240,7 +233,6 @@
             color: white;
         }
 
-        /* セルをクリック可能に */
         td {
             cursor: pointer;
             transition: background 0.1s;
@@ -271,7 +263,7 @@
 <body>
 <header>
     <div class="container header-inner">
-        <h1 id="appTitle">📖 Татар теле · タタール語 · Tatar language</h1>
+        <h1 id="appTitle">📖 タタール語 - 日本語</h1>
         <div class="toolbar">
             <div id="langSwitcher">
                 <button class="lang-btn" data-lang="jp">日本語</button>
@@ -315,10 +307,10 @@
 </footer>
 
 <script>
-    // ---------- 多言語UI辞書 ----------
+    // ---------- 多言語UI辞書（タイトルは各言語で「タタール語 - 日本語」簡潔に）----------
     const uiText = {
         jp: {
-            appTitle: "📖 タタール語 · タタール語 · タタール語",
+            appTitle: "📖 タタール語 - 日本語",
             cardPatternsTitle: "基本文型",
             cardPatternsDesc: "6つの文型（日本語・タタール語・ロシア語・英語）",
             cardPhrasesTitle: "50例文",
@@ -331,11 +323,11 @@
             phrasesHeader: "50例文"
         },
         tt: {
-            appTitle: "📖 Татар теле · Япон теле · Рус теле · Инглиз теле",
+            appTitle: "📖 Татар теле - Япон теле",
             cardPatternsTitle: "Төп грамматик конструкцияләр",
             cardPatternsDesc: "6 конструкция (японча, татарча, русча, инглизчә)",
             cardPhrasesTitle: "50 мисал җөмлә",
-            cardPatternsDesc: "Көндәлек фигыльләр һәм сыйфатлар",
+            cardPhrasesDesc: "Көндәлек фигыльләр һәм сыйфатлар",
             cardPronounsTitle: "Алмашлыклар",
             cardPronounsDesc: "Барлык килешләр, һәр күзәнәкне басып тыңлау",
             footerContact: "Бәйләнеш",
@@ -344,11 +336,11 @@
             phrasesHeader: "50 мисал җөмлә"
         },
         ru: {
-            appTitle: "📖 Татарский · Японский · Русский · Английский",
+            appTitle: "📖 Татарский - Японский",
             cardPatternsTitle: "Основные грамматические конструкции",
             cardPatternsDesc: "6 конструкций (яп., тат., рус., англ.)",
             cardPhrasesTitle: "50 фраз",
-            cardPatternsDesc: "Глаголы и прилагательные повседневного обихода",
+            cardPhrasesDesc: "Глаголы и прилагательные повседневного обихода",
             cardPronounsTitle: "Местоимения",
             cardPronounsDesc: "Все падежи, нажмите на ячейку для озвучивания",
             footerContact: "Контакты",
@@ -357,11 +349,11 @@
             phrasesHeader: "50 основных фраз"
         },
         en: {
-            appTitle: "📖 Tatar · Japanese · Russian · English",
+            appTitle: "📖 Tatar - Japanese",
             cardPatternsTitle: "Basic Patterns",
             cardPatternsDesc: "6 patterns (Japanese, Tatar, Russian, English)",
             cardPhrasesTitle: "50 Example Phrases",
-            cardPatternsDesc: "Essential verbs & adjectives",
+            cardPhrasesDesc: "Essential verbs & adjectives",
             cardPronounsTitle: "Personal Pronouns",
             cardPronounsDesc: "All cases, tap any cell to hear pronunciation",
             footerContact: "Contact us",
@@ -371,18 +363,15 @@
         }
     };
 
-    // 現在のUI言語 (デフォルト英語)
     let currentUiLang = 'en';
 
-    // 音声発話関数（日本語の私対策）
+    // 音声発話関数（日本語「私」対策）
     function speakText(rawText, langCode) {
         if (!rawText) return;
         let text = rawText;
         if (langCode === 'jp') {
-            // 「私」単体→watashi、「私達」→watashitachi、「私の」→watashi no など
             text = text.replace(/私達/g, 'watashitachi');
             text = text.replace(/私/g, 'watashi');
-            // 他の助詞はそのままローマ字読みになるが自然
         }
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
@@ -392,7 +381,7 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    // ----- データ（前回と同様、変更なし）-----
+    // ----- データ（文型・フレーズ・代名詞は前回と同一）-----
     const patternsData = [
         { title_jp: "名詞文", title_en: "Noun predicate", desc: "S + C (noun)" },
         { samples: [ { jp: "私はタタール人です。", tt: "Min tatar.", ru: "Я татарин.", en: "I am a Tatar." } ] },
@@ -527,21 +516,19 @@
         }}
     ];
 
-    // UIを現在の言語に更新
+    // UI更新関数
     function updateUI() {
         const t = uiText[currentUiLang];
         document.getElementById('appTitle').innerText = t.appTitle;
         document.getElementById('cardPatternsTitle').innerHTML = t.cardPatternsTitle;
         document.getElementById('cardPatternsDesc').innerText = t.cardPatternsDesc;
         document.getElementById('cardPhrasesTitle').innerHTML = t.cardPhrasesTitle;
-        document.getElementById('cardPhrasesDesc').innerText = t.cardPatternsDesc; // 修正（原典ではcardPhrasesDescがなかったのでcardPatternsDescを流用）
+        document.getElementById('cardPhrasesDesc').innerText = t.cardPhrasesDesc;
         document.getElementById('cardPronounsTitle').innerHTML = t.cardPronounsTitle;
         document.getElementById('cardPronounsDesc').innerText = t.cardPronounsDesc;
         document.getElementById('footerContact').innerText = t.footerContact;
-        // 詳細表示中の場合も内容を再描画する必要があるが、詳細内の動的要素はshowDetail内部で毎回生成されるので、次回の表示時に新しい言語が適用される。
     }
 
-    // 言語切り替えボタンのアクティブ表示
     function setActiveLangButton(lang) {
         document.querySelectorAll('.lang-btn').forEach(btn => {
             if (btn.getAttribute('data-lang') === lang) btn.classList.add('active');
@@ -549,7 +536,6 @@
         });
     }
 
-    // 表のセルクリックで発音
     function attachCellSpeak(container) {
         container.querySelectorAll('td').forEach(cell => {
             cell.removeEventListener('click', cell._speakHandler);
@@ -563,7 +549,6 @@
         });
     }
 
-    // 人称代名詞の詳細表示（英語ケース名 + 各セルクリック発音）
     function showPronounTable(pronoun) {
         const container = document.getElementById('pronounDetailArea');
         const caseNames = {
@@ -591,7 +576,6 @@
         attachCellSpeak(container);
     }
 
-    // 詳細ビューの描画 (文型、フレーズ、人称)
     function showDetail(section) {
         const mainDiv = document.getElementById('mainView');
         const detailDiv = document.getElementById('detailView');
@@ -649,7 +633,6 @@
         }
 
         detailDiv.innerHTML = html;
-        // セルクリック発音をアタッチ
         detailDiv.querySelectorAll('.lang-text').forEach(el => {
             const lang = el.getAttribute('data-lang');
             const text = el.getAttribute('data-text');
@@ -666,17 +649,15 @@
         window.speechSynthesis.cancel();
     }
 
-    // 初期化とイベント
+    // 初期化
     document.addEventListener('DOMContentLoaded', () => {
-        // 言語切り替え
+        // 言語切り替えボタン設定
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentUiLang = btn.getAttribute('data-lang');
                 updateUI();
                 setActiveLangButton(currentUiLang);
-                // 現在詳細が開いていれば再描画（簡易的にリロードせず、再度詳細を開き直す必要があるが、ユーザ体験を考慮して閉じる）
                 if (document.getElementById('detailView').style.display === 'block') {
-                    // 詳細を閉じてメインに戻る
                     backHandler();
                 }
             });
@@ -684,7 +665,6 @@
         setActiveLangButton(currentUiLang);
         updateUI();
 
-        // カードクリック
         document.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', (e) => {
                 const section = card.getAttribute('data-section');
@@ -692,7 +672,6 @@
             });
         });
 
-        // テーマ切替
         const themeBtn = document.getElementById('themeToggleBtn');
         themeBtn.addEventListener('click', () => {
             document.body.classList.toggle('light');
@@ -700,14 +679,14 @@
         });
         if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
         else document.body.classList.add('dark');
-    });
 
-    // サービスワーカーの登録（PWAインストール対応）
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('.sw.js')
-            .then(reg => console.log('ServiceWorker registered:', reg))
-            .catch(err => console.error('SW registration failed:', err));
-    }
+        // サービスワーカー登録（PWAインストール対応）
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('ServiceWorker registered:', reg))
+                .catch(err => console.error('SW registration failed:', err));
+        }
+    });
 </script>
 </body>
 </html>
