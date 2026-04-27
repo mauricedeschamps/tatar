@@ -41,15 +41,41 @@
         .lang-text { flex: 1; font-size: 1rem; cursor: pointer; }
         .lang-text:hover { color: var(--primary); }
         .lang-label { font-weight: bold; width: 70px; color: var(--primary); }
-        .romaji { font-size: 0.9rem; color: var(--text-muted); margin-left: 0.75rem; font-family: monospace; }
+        .romaji {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-left: 0.75rem;
+            font-family: monospace;
+            background: var(--card-bg);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+            cursor: text;
+        }
+        .romaji:focus-visible {
+            outline: 2px solid var(--primary);
+            background: var(--bg);
+            color: var(--text);
+        }
         .pronoun-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0; }
         .pronoun-btn { background: var(--primary); color: white; padding: 0.8rem 1.3rem; border-radius: 60px; font-weight: bold; font-size: 1.1rem; }
         .pronoun-table-container { overflow-x: auto; margin-top: 1.5rem; }
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 20px; }
         th, td { border: 1px solid var(--border); padding: 12px 8px; text-align: left; vertical-align: top; }
         th { background: var(--primary); color: white; }
-        td { cursor: pointer; transition: background 0.1s; }
-        td:hover { background: var(--cell-hover); }
+        td { cursor: default; }
+        .pronoun-romaji {
+            display: inline-block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            background: var(--bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 10px;
+            margin-left: 0.5rem;
+            border: 1px dashed var(--border);
+            cursor: text;
+        }
         footer a { color: var(--primary); text-decoration: none; }
         @media (max-width: 640px) { .lang-row { flex-direction: column; } .lang-label { width: auto; } th, td { padding: 8px 4px; font-size: 0.85rem; } }
     </style>
@@ -84,75 +110,29 @@
 <footer><div class="container"><span id="footerContact">Contact us</span><br><a href="mailto:mementomorikatsu@gmail.com">mementomorikatsu@gmail.com</a></div></footer>
 
 <script>
-    // ---------- 漢字→ひらがな変換辞書（全例文カバー）----------
+    // ========== 漢字→ひらがな変換（自動生成時のフォールバック用） ==========
     const kanjiToHira = {
-        // 基本代名詞・指示詞
         "私": "わたし", "あなた": "あなた", "彼": "かれ", "彼女": "かのじょ", "私達": "わたしたち", "あなた達": "あなたたち", "彼ら": "かれら", "彼女ら": "かのじょら",
         "これ": "これ", "それ": "それ", "あれ": "あれ", "どれ": "どれ", "この": "この", "その": "その", "あの": "あの", "どの": "どの",
-        // 名詞
         "学生": "がくせい", "教師": "きょうし", "本": "ほん", "今日": "きょう", "料理": "りょうり", "建物": "たてもの", "仕事": "しごと",
         "街": "まち", "ペン": "ぺん", "学校": "がっこう", "家": "いえ", "図書館": "としょかん", "友達": "ともだち", "電車": "でんしゃ",
         "駅": "えき", "パン": "ぱん", "紅茶": "こうちゃ", "果物": "くだもの", "ホテル": "ほてる", "子供": "こども", "朝ごはん": "あさごはん",
         "テレビ": "てれび", "声": "こえ", "手紙": "てがみ", "日記": "にっき", "新聞": "しんぶん", "音楽": "おんがく", "ロシア語": "ろしあご",
         "仕事": "しごと", "散歩": "さんぽ", "タタール人": "たたーるじん", "モスクワ": "もすくわ", "スープ": "すーぷ",
-        // 形容詞
         "暑い": "あつい", "美味しい": "おいしい", "大きい": "おおきい", "難しい": "むずかしい", "古い": "ふるい", "静か": "しずか",
-        "忙しい": "いそがしい", "若い": "わかい", "親切": "しんせつ", "美しい": "うつくしい", "楽しい": "たのしい", "悲しい": "かなしい",
-        "綺麗": "きれい", "暑い": "あつい", "寒い": "さむい", "簡単": "かんたん", "良い": "よい", "悪い": "わるい", "新しい": "あたらしい",
-        // 動詞
+        "忙しい": "いそがしい", "若い": "わかい", "親切": "しんせつ", "美しい": "うつくしい", "良い": "よい", "悪い": "わるい", "新しい": "あたらしい",
         "行く": "いく", "来る": "くる", "帰る": "かえる", "歩く": "あるく", "着く": "つく", "食べる": "たべる", "飲む": "のむ",
         "泊まる": "とまる", "起きる": "おきる", "寝る": "ねる", "眠る": "ねむる", "見る": "みる", "聞こえる": "きこえる", "言う": "いう",
         "話す": "はなす", "読む": "よむ", "書く": "かく", "分かる": "わかる", "考える": "かんがえる", "勉強する": "べんきょうする",
-        "する": "する", "弾く": "ひく", "聴く": "きく", "終わる": "おわる", "与える": "あたえる", "遊ぶ": "あそぶ", "プレイする": "ぷれいする",
-        // その他
-        "達": "たち", "の": "の", "を": "を", "に": "に", "へ": "へ", "から": "から", "で": "で", "は": "は", "が": "が", "も": "も",
-        "です": "です", "ます": "ます", "た": "た", "ない": "ない", "かった": "かった", "たい": "たい", "うれしく": "うれしく"
+        "する": "する", "弾く": "ひく", "聴く": "きく", "終わる": "おわる", "与える": "あたえる", "うれしく": "うれしく",
+        "です": "です", "ます": "ます", "た": "た", "ない": "ない", "かった": "かった", "たい": "たい"
     };
 
-    // ひらがな→ローマ字（ヘボン式＋単語区切り・助詞ハイフン）
-    function toRomajiWithSpaces(japaneseText) {
-        // 1. 漢字をひらがなに変換
+    // 簡易ローマ字変換（編集前の初期値を生成するためだけに使用）
+    function simpleRomaji(japaneseText) {
         let hira = japaneseText;
-        // 長いキーから順に置換（例：「私達」を「わたしたち」→「私」より先に）
         const sortedKeys = Object.keys(kanjiToHira).sort((a,b)=>b.length - a.length);
-        for (let kanji of sortedKeys) {
-            hira = hira.replace(new RegExp(kanji, 'g'), kanjiToHira[kanji]);
-        }
-        // カタカナをひらがなに（簡易）
-        hira = hira.replace(/[ァ-ヶ]/g, function(ch) {
-            return String.fromCharCode(ch.charCodeAt(0) - 0x60);
-        });
-
-        // 2. トークン分割（助詞・述語で区切る）
-        const particles = ['は','が','を','に','へ','で','から','まで','の','も','と','や','か','ね','よ'];
-        const predicates = ['です','ます','た','ない','かった','たい'];
-        
-        let tokens = [];
-        let current = '';
-        for (let i=0; i<hira.length; i++) {
-            current += hira[i];
-            // 述語チェック（後ろから見てマッチ）
-            let matched = false;
-            for (let pred of predicates) {
-                if (current.endsWith(pred)) {
-                    let prefix = current.slice(0, -pred.length);
-                    if (prefix) tokens.push(prefix);
-                    tokens.push(pred);
-                    current = '';
-                    matched = true;
-                    break;
-                }
-            }
-            if (matched) continue;
-            // 助詞チェック
-            if (particles.includes(hira[i])) {
-                tokens.push(current);
-                current = '';
-            }
-        }
-        if (current) tokens.push(current);
-
-        // 3. 各トークンをローマ字化し、助詞をハイフンで前のトークンに結合
+        for (let kanji of sortedKeys) hira = hira.replace(new RegExp(kanji, 'g'), kanjiToHira[kanji]);
         const romaMap = {
             'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko',
             'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
@@ -167,49 +147,118 @@
             'ぎょ':'gyo','じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'byo','ぴゃ':'pya',
             'ぴゅ':'pyu','ぴょ':'pyo','っ':'','ー':''
         };
-        function tokenToRoma(tok) {
-            let res = '';
-            for (let i=0; i<tok.length; i++) {
-                let found = false;
-                if (i+1 < tok.length) {
-                    let two = tok.substr(i,2);
-                    if (romaMap[two]) { res += romaMap[two]; i++; found = true; }
-                }
-                if (!found) {
-                    let ch = tok[i];
-                    res += romaMap[ch] || ch;
-                }
-            }
-            return res;
-        }
-
-        let resultTokens = [];
-        for (let i=0; i<tokens.length; i++) {
-            let rom = tokenToRoma(tokens[i]);
-            // 助詞トークン（最後の文字が助詞）の場合、前のトークンにハイフンで結合
-            let lastChar = tokens[i][tokens[i].length-1];
-            if (particles.includes(lastChar) && resultTokens.length > 0) {
-                resultTokens[resultTokens.length-1] += '-' + rom;
+        let rom = '';
+        for (let i=0; i<hira.length; i++) {
+            if (i+1 < hira.length && romaMap[hira.substr(i,2)]) {
+                rom += romaMap[hira.substr(i,2)]; i++;
             } else {
-                resultTokens.push(rom);
+                rom += romaMap[hira[i]] || hira[i];
             }
         }
-        // 助詞「は」「へ」の読み換え
-        let result = resultTokens.join(' ');
-        result = result.replace(/\bha\b/g, 'wa').replace(/(\S+)-ha\b/g, '$1-wa');
-        result = result.replace(/\bhe\b/g, 'e').replace(/(\S+)-he\b/g, '$1-e');
-        result = result.replace(/を/g, 'o'); // 助詞「を」は常に 'o'
-        // 数字「6」などはそのまま（特別処理）
-        result = result.replace(/\b6\b/g, 'roku');
-        return result;
+        rom = rom.replace(/ha(?= |$)/g, 'wa').replace(/he(?= |$)/g, 'e');
+        rom = rom.replace(/を/g, 'o');
+        return rom;
     }
 
-    function formatJapanese(text) {
-        const rom = toRomajiWithSpaces(text);
-        return `${text} <span class="romaji">(${rom})</span>`;
+    // 編集可能なローマ字を含む日本語表示を生成 (ローカルストレージ対応)
+    function makeEditableRomaji(japaneseText, id) {
+        let defaultValue = simpleRomaji(japaneseText);
+        // 保存されていた値があればそれを使う
+        const saved = localStorage.getItem(`romaji_${id}`);
+        if (saved !== null) defaultValue = saved;
+        return `<span class="romaji" contenteditable="true" data-id="${id}" data-original="${japaneseText}">${defaultValue}</span>`;
     }
 
-    // 音声再生 (日本語は生文を読み上げ)
+    // ローカルストレージに保存 (blur 時に呼び出す)
+    function saveRomaji(id, newValue) {
+        localStorage.setItem(`romaji_${id}`, newValue);
+    }
+
+    // ----- データ -----
+    const patternsData = [
+        { id: "pat1", title:"名詞文 / Noun", jp:"私はタタール人です。", tt:"Min tatar.", ru:"Я татарин.", en:"I am a Tatar." },
+        { id: "pat2", title:"形容詞文 / Adjective", jp:"この料理は美味しい。", tt:"Bu aşamlıq tämle.", ru:"Это блюдо вкусное.", en:"This dish is delicious." },
+        { id: "pat3", title:"自動詞(移動) / Intransitive", jp:"私は学校へ行く。", tt:"Min mäktäpkä baram.", ru:"Я иду в школу.", en:"I go to school." },
+        { id: "pat4", title:"他動詞 / Transitive", jp:"私はお茶を飲む。", tt:"Min çäy içäm.", ru:"Я пью чай.", en:"I drink tea." },
+        { id: "pat5", title:"授与文 / Dative+Acc", jp:"私はあなたに本を与える。", tt:"Min siña kitap biräm.", ru:"Я даю тебе книгу.", en:"I give you a book." },
+        { id: "pat6", title:"使役・結果 / Causative", jp:"あなたは私をうれしくする。", tt:"Sin mine bäxetle itäsen.", ru:"Ты делаешь меня счастливым.", en:"You make me happy." }
+    ];
+
+    const allPhrases = [
+        { id:"ph1", jp:"私は学生です。", tt:"Min student.", ru:"Я студент.", en:"I am a student." },
+        { id:"ph2", jp:"私は教師です。", tt:"Min uqıtuçı.", ru:"Я учитель.", en:"I am a teacher." },
+        { id:"ph3", jp:"これは本です。", tt:"Bu kitap.", ru:"Это книга.", en:"This is a book." },
+        { id:"ph4", jp:"今日は暑いです。", tt:"Börən cılı.", ru:"Сегодня жарко.", en:"Today is hot." },
+        { id:"ph5", jp:"このスープは美味しいです。", tt:"Bu şulpa tämle.", ru:"Этот суп вкусный.", en:"This soup is tasty." },
+        { id:"ph6", jp:"あの建物は大きいです。", tt:"Te bina zur.", ru:"То здание большое.", en:"That building is big." },
+        { id:"ph7", jp:"私の仕事は難しいです。", tt:"Minem eşem çetin.", ru:"Моя работа трудная.", en:"My job is difficult." },
+        { id:"ph8", jp:"タタール語は美しいです。", tt:"Tatar tele matur.", ru:"Татарский язык красивый.", en:"Tatar language is beautiful." },
+        { id:"ph9", jp:"この街は古いです。", tt:"Bu şähär iske.", ru:"Этот город старый.", en:"This city is old." },
+        { id:"ph10", jp:"ここは静かです。", tt:"Monda tınıç.", ru:"Здесь тихо.", en:"It's quiet here." },
+        { id:"ph11", jp:"私は忙しいです。", tt:"Min mäşğül.", ru:"Я занят.", en:"I'm busy." },
+        { id:"ph12", jp:"あなたは若いです。", tt:"Sin yäş.", ru:"Ты молод.", en:"You are young." },
+        { id:"ph13", jp:"彼は親切です。", tt:"Ul yomşaq küñelle.", ru:"Он добрый.", en:"He is kind." },
+        { id:"ph14", jp:"これは私のペンです。", tt:"Bu minem qäläm.", ru:"Это моя ручка.", en:"This is my pen." },
+        { id:"ph15", jp:"私は学校へ行きます。", tt:"Min mäktäpkä baram.", ru:"Я иду в школу.", en:"I go to school." },
+        { id:"ph16", jp:"彼は家へ帰ります。", tt:"Ul öygä qayta.", ru:"Он возвращается домой.", en:"He returns home." },
+        { id:"ph17", jp:"私はモスクワへ行きました。", tt:"Min Məskəwgə bardım.", ru:"Я ездил в Москву.", en:"I went to Moscow." },
+        { id:"ph18", jp:"私たちは図書館へ行きます。", tt:"Bez kitapxanäğa barabız.", ru:"Мы идём в библиотеку.", en:"We go to the library." },
+        { id:"ph19", jp:"あなたはいつ来ますか？", tt:"Sin qaçan kiläsen?", ru:"Когда ты придёшь?", en:"When will you come?" },
+        { id:"ph20", jp:"友達が私の家に来ます。", tt:"Dus minem öygä kilä.", ru:"Друг приходит ко мне домой.", en:"A friend comes to my house." },
+        { id:"ph21", jp:"私は歩いて行きます。", tt:"Min cayaw baram.", ru:"Я иду пешком.", en:"I go on foot." },
+        { id:"ph22", jp:"電車は駅に着きます。", tt:"Poyezd stantsiyägä citä.", ru:"Поезд прибывает на вокзал.", en:"The train arrives at the station." },
+        { id:"ph23", jp:"私はパンを食べます。", tt:"Min ip içäm.", ru:"Я ем хлеб.", en:"I eat bread." },
+        { id:"ph24", jp:"私は紅茶を飲みます。", tt:"Min çäy içäm.", ru:"Я пью чай.", en:"I drink tea." },
+        { id:"ph25", jp:"彼女は果物を食べています。", tt:"Ul cilek aşıy.", ru:"Она ест фрукты.", en:"She is eating fruit." },
+        { id:"ph26", jp:"私たちはホテルに泊まります。", tt:"Bez hotelda tuktíybız.", ru:"Мы останавливаемся в отеле.", en:"We stay at a hotel." },
+        { id:"ph27", jp:"私は毎朝6時に起きます。", tt:"Min här irtä säğät 6-da toram.", ru:"Я встаю в 6 часов каждое утро.", en:"I wake up at 6 every morning." },
+        { id:"ph28", jp:"子供たちは早く寝ます。", tt:"Balalar irta yoklıylar.", ru:"Дети ложатся спать рано.", en:"Children sleep early." },
+        { id:"ph29", jp:"昨夜は良く眠れました。", tt:"Kiçä yaxşı yokladım.", ru:"Вчера я хорошо спал.", en:"Last night I slept well." },
+        { id:"ph30", jp:"あなたは朝ごはんを食べましたか？", tt:"Sin irtänge aş aşadıñmı?", ru:"Ты позавтракал?", en:"Did you eat breakfast?" },
+        { id:"ph31", jp:"私はテレビを見ます。", tt:"Min televizor küräm.", ru:"Я смотрю телевизор.", en:"I watch TV." },
+        { id:"ph32", jp:"あなたは私の声が聞こえますか？", tt:"Sin mine tanışlıymı?", ru:"Ты слышишь мой голос?", en:"Do you hear my voice?" },
+        { id:"ph33", jp:"彼は「こんにちは」と言いました。", tt:"Ul 'isänme' dide.", ru:"Он сказал «здравствуй».", en:"He said 'hello'." },
+        { id:"ph34", jp:"私は日本語を話します。", tt:"Min yaponça söyläşäm.", ru:"Я говорю по-японски.", en:"I speak Japanese." },
+        { id:"ph35", jp:"この本を読んでください。", tt:"Bu kitapnı uğığız.", ru:"Прочитайте эту книгу.", en:"Please read this book." },
+        { id:"ph36", jp:"私は手紙を書いています。", tt:"Min xat yazam.", ru:"Я пишу письмо.", en:"I am writing a letter." },
+        { id:"ph37", jp:"彼女は日記を書きます。", tt:"Ul könlek yaza.", ru:"Она пишет дневник.", en:"She writes a diary." },
+        { id:"ph38", jp:"私は新聞を読みません。", tt:"Min gazeta uqımım.", ru:"Я не читаю газету.", en:"I don't read the newspaper." },
+        { id:"ph39", jp:"分かりましたか？", tt:"Añladığızmı?", ru:"Вы поняли?", en:"Did you understand?" },
+        { id:"ph40", jp:"あなたの言っていることが分かりません。", tt:"Min sezne añlamim.", ru:"Я вас не понимаю.", en:"I don't understand you." },
+        { id:"ph41", jp:"私はあなたのことを考えています。", tt:"Min sinıñ turında uylım.", ru:"Я думаю о тебе.", en:"I'm thinking of you." },
+        { id:"ph42", jp:"私は毎日勉強します。", tt:"Min kön sayın öyränäm.", ru:"Я занимаюсь каждый день.", en:"I study every day." },
+        { id:"ph43", jp:"彼はサッカーをします。", tt:"Ul futbol uynıy.", ru:"Он играет в футбол.", en:"He plays soccer." },
+        { id:"ph44", jp:"私はピアノを弾きます。", tt:"Min pianinoda uynıym.", ru:"Я играю на пианино.", en:"I play the piano." },
+        { id:"ph45", jp:"何をしていますか？", tt:"Sin nişliseñ?", ru:"Что ты делаешь?", en:"What are you doing?" },
+        { id:"ph46", jp:"音楽を聴くのが好きです。", tt:"Min muzıkı tıñlarğa yaratam.", ru:"Я люблю слушать музыку.", en:"I like listening to music." },
+        { id:"ph47", jp:"私はロシア語を少し理解します。", tt:"Min rusça beraz añlıym.", ru:"Я немного понимаю русский.", en:"I understand a little Russian." },
+        { id:"ph48", jp:"仕事が終わりました。", tt:"Eş tämam.", ru:"Работа закончена.", en:"The work is finished." },
+        { id:"ph49", jp:"一緒に散歩しませんか？", tt:"Bergä sayırğa çıqayıq?", ru:"Пойдём гулять вместе?", en:"Shall we go for a walk together?" },
+        { id:"ph50", jp:"お元気で。", tt:"Saw bulığız.", ru:"Будьте здоровы.", en:"Stay healthy." }
+    ];
+
+    const pronounsList = [
+        { id:"pron1", name:"私 / I / Я / мин", forms:{ nom:{jp:"私"}, gen:{jp:"私の"}, acc:{jp:"私を"}, dat:{jp:"私に"}, abl:{jp:"私から/私で"} }, tt:{ nom:"мин", gen:"минем", acc:"мине", dat:"миңа", abl:"миннән" }, ru:{ nom:"я", gen:"меня", acc:"меня", dat:"мне", abl:"от меня / мной" }, en:{ nom:"I", gen:"my/mine", acc:"me", dat:"to me", abl:"from me / by me"} },
+        { id:"pron2", name:"あなた / you / ты / син", forms:{ nom:{jp:"あなた"}, gen:{jp:"あなたの"}, acc:{jp:"あなたを"}, dat:{jp:"あなたに"}, abl:{jp:"あなたから/で"} }, tt:{ nom:"син", gen:"синең", acc:"сине", dat:"сиңа", abl:"синнән" }, ru:{ nom:"ты", gen:"тебя", acc:"тебя", dat:"тебе", abl:"от тебя / тобой" }, en:{ nom:"you (sg)", gen:"your", acc:"you", dat:"to you", abl:"from you / by you"} },
+        { id:"pron3", name:"彼 / he / он / ул", forms:{ nom:{jp:"彼"}, gen:{jp:"彼の"}, acc:{jp:"彼を"}, dat:{jp:"彼に"}, abl:{jp:"彼から/で"} }, tt:{ nom:"ул", gen:"аның", acc:"аны", dat:"аңа", abl:"аннан" }, ru:{ nom:"он", gen:"его", acc:"его", dat:"ему", abl:"от него / им" }, en:{ nom:"he", gen:"his", acc:"him", dat:"to him", abl:"from him / by him"} },
+        { id:"pron4", name:"彼女 / she / она / ул", forms:{ nom:{jp:"彼女"}, gen:{jp:"彼女の"}, acc:{jp:"彼女を"}, dat:{jp:"彼女に"}, abl:{jp:"彼女から/で"} }, tt:{ nom:"ул", gen:"аның", acc:"аны", dat:"аңа", abl:"аннан" }, ru:{ nom:"она", gen:"её", acc:"её", dat:"ей", abl:"от неё / ею" }, en:{ nom:"she", gen:"her", acc:"her", dat:"to her", abl:"from her / by her"} },
+        { id:"pron5", name:"それ / it / оно / ул", forms:{ nom:{jp:"それ"}, gen:{jp:"それの"}, acc:{jp:"それを"}, dat:{jp:"それに"}, abl:{jp:"それから/で"} }, tt:{ nom:"ул", gen:"аның", acc:"аны", dat:"аңа", abl:"аннан" }, ru:{ nom:"оно", gen:"его", acc:"его", dat:"ему", abl:"от него / им" }, en:{ nom:"it", gen:"its", acc:"it", dat:"to it", abl:"from it / by it"} },
+        { id:"pron6", name:"私達 / we / мы / без", forms:{ nom:{jp:"私達"}, gen:{jp:"私達の"}, acc:{jp:"私達を"}, dat:{jp:"私達に"}, abl:{jp:"私達から/で"} }, tt:{ nom:"без", gen:"безнең", acc:"безне", dat:"безгә", abl:"бездән" }, ru:{ nom:"мы", gen:"нас", acc:"нас", dat:"нам", abl:"от нас / нами" }, en:{ nom:"we", gen:"our", acc:"us", dat:"to us", abl:"from us / by us"} },
+        { id:"pron7", name:"あなた達 / you (pl) / вы / сез", forms:{ nom:{jp:"あなた達"}, gen:{jp:"あなた達の"}, acc:{jp:"あなた達を"}, dat:{jp:"あなた達に"}, abl:{jp:"あなた達から/で"} }, tt:{ nom:"сез", gen:"сезнең", acc:"сезне", dat:"сезгә", abl:"сездән" }, ru:{ nom:"вы", gen:"вас", acc:"вас", dat:"вам", abl:"от вас / вами" }, en:{ nom:"you (pl)", gen:"your (pl)", acc:"you (pl)", dat:"to you (pl)", abl:"from you / by you (pl)"} },
+        { id:"pron8", name:"彼ら / they (m) / они / алар", forms:{ nom:{jp:"彼ら"}, gen:{jp:"彼らの"}, acc:{jp:"彼らを"}, dat:{jp:"彼らに"}, abl:{jp:"彼らから/で"} }, tt:{ nom:"алар", gen:"аларның", acc:"аларны", dat:"аларга", abl:"алардан" }, ru:{ nom:"они", gen:"их", acc:"их", dat:"им", abl:"от них / ими" }, en:{ nom:"they (m)", gen:"their", acc:"them", dat:"to them", abl:"from them / by them"} },
+        { id:"pron9", name:"彼女ら / they (f) / они / алар", forms:{ nom:{jp:"彼女ら"}, gen:{jp:"彼女らの"}, acc:{jp:"彼女らを"}, dat:{jp:"彼女らに"}, abl:{jp:"彼女らから/で"} }, tt:{ nom:"алар", gen:"аларның", acc:"аларны", dat:"аларга", abl:"алардан" }, ru:{ nom:"они", gen:"их", acc:"их", dat:"им", abl:"от них / ими" }, en:{ nom:"they (f)", gen:"their", acc:"them", dat:"to them", abl:"from them / by them"} }
+    ];
+
+    // UI多言語
+    const uiText = {
+        jp: { appTitle:"📖 タタール語 - 日本語", cardPatternsTitle:"基本文型", cardPatternsDesc:"6つの文型", cardPhrasesTitle:"50例文", cardPhrasesDesc:"日常動詞・形容詞", cardPronounsTitle:"人称代名詞", cardPronounsDesc:"全格変化表をタップで発音", footerContact:"お問い合わせ", backBtn:"戻る", patternsHeader:"基本文型", phrasesHeader:"50例文" },
+        tt: { appTitle:"📖 Татар теле - Япон теле", cardPatternsTitle:"Төп грамматик конструкцияләр", cardPatternsDesc:"6 конструкция", cardPhrasesTitle:"50 мисал җөмлә", cardPhrasesDesc:"Көндәлек фигыльләр", cardPronounsTitle:"Алмашлыклар", cardPronounsDesc:"Барлык килешләр, басып тыңлау", footerContact:"Бәйләнеш", backBtn:"Кире", patternsHeader:"Төп конструкцияләр", phrasesHeader:"50 мисал" },
+        ru: { appTitle:"📖 Татарский - Японский", cardPatternsTitle:"Основные конструкции", cardPatternsDesc:"6 конструкций", cardPhrasesTitle:"50 фраз", cardPhrasesDesc:"Глаголы и прилагательные", cardPronounsTitle:"Местоимения", cardPronounsDesc:"Все падежи, нажмите на ячейку", footerContact:"Контакты", backBtn:"Назад", patternsHeader:"Основные конструкции", phrasesHeader:"50 фраз" },
+        en: { appTitle:"📖 Tatar - Japanese", cardPatternsTitle:"Basic Patterns", cardPatternsDesc:"6 patterns", cardPhrasesTitle:"50 Example Phrases", cardPhrasesDesc:"Essential verbs & adjectives", cardPronounsTitle:"Personal Pronouns", cardPronounsDesc:"All cases, tap any cell to hear", footerContact:"Contact us", backBtn:"Back", patternsHeader:"Basic Grammar Patterns", phrasesHeader:"50 Essential Phrases" }
+    };
+    let currentUiLang = 'en';
+
+    // 音声再生
     function speakText(rawText, langCode) {
         if (!rawText) return;
         let text = (langCode === 'jp') ? rawText.replace(/私/g,'わたし').replace(/私達/g,'わたしたち') : rawText;
@@ -221,93 +270,136 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    // UI多言語辞書
-    const uiText = {
-        jp: { appTitle:"📖 タタール語 - 日本語", cardPatternsTitle:"基本文型", cardPatternsDesc:"6つの文型", cardPhrasesTitle:"50例文", cardPhrasesDesc:"日常動詞・形容詞", cardPronounsTitle:"人称代名詞", cardPronounsDesc:"全格変化表をタップで発音", footerContact:"お問い合わせ", backBtn:"戻る", patternsHeader:"基本文型 (6パターン)", phrasesHeader:"50例文" },
-        tt: { appTitle:"📖 Татар теле - Япон теле", cardPatternsTitle:"Төп грамматик конструкцияләр", cardPatternsDesc:"6 конструкция", cardPhrasesTitle:"50 мисал җөмлә", cardPhrasesDesc:"Көндәлек фигыльләр", cardPronounsTitle:"Алмашлыклар", cardPronounsDesc:"Барлык килешләр, басып тыңлау", footerContact:"Бәйләнеш", backBtn:"Кире", patternsHeader:"Төп конструкцияләр", phrasesHeader:"50 мисал" },
-        ru: { appTitle:"📖 Татарский - Японский", cardPatternsTitle:"Основные конструкции", cardPatternsDesc:"6 конструкций", cardPhrasesTitle:"50 фраз", cardPhrasesDesc:"Глаголы и прилагательные", cardPronounsTitle:"Местоимения", cardPronounsDesc:"Все падежи, нажмите на ячейку", footerContact:"Контакты", backBtn:"Назад", patternsHeader:"Основные конструкции", phrasesHeader:"50 фраз" },
-        en: { appTitle:"📖 Tatar - Japanese", cardPatternsTitle:"Basic Patterns", cardPatternsDesc:"6 patterns", cardPhrasesTitle:"50 Example Phrases", cardPhrasesDesc:"Essential verbs & adjectives", cardPronounsTitle:"Personal Pronouns", cardPronounsDesc:"All cases, tap any cell to hear", footerContact:"Contact us", backBtn:"Back", patternsHeader:"Basic Grammar Patterns", phrasesHeader:"50 Essential Phrases" }
-    };
-    let currentUiLang = 'en';
+    // 編集可能なローマ字を含むHTMLを生成 (文型・例文用)
+    function renderLangRowWithEditableRomaji(item, langCode, text, id) {
+        if (langCode === 'jp') {
+            const romajiSpan = makeEditableRomaji(text, id);
+            return `<div class="lang-row">
+                <div class="lang-label">${langCode.toUpperCase()}</div>
+                <div class="lang-text" data-lang="jp" data-text="${text.replace(/"/g, '&quot;')}">${text} ${romajiSpan}</div>
+            </div>`;
+        } else {
+            return `<div class="lang-row">
+                <div class="lang-label">${langCode.toUpperCase()}</div>
+                <div class="lang-text" data-lang="${langCode}" data-text="${text.replace(/"/g, '&quot;')}">${text}</div>
+            </div>`;
+        }
+    }
 
-    // データ（日本語文は生文）
-    const patternsData = [
-        { title:"名詞文 / Noun", samples:[{ jp:"私はタタール人です。", tt:"Min tatar.", ru:"Я татарин.", en:"I am a Tatar." }] },
-        { title:"形容詞文 / Adjective", samples:[{ jp:"この料理は美味しい。", tt:"Bu aşamlıq tämle.", ru:"Это блюдо вкусное.", en:"This dish is delicious." }] },
-        { title:"自動詞(移動) / Intransitive", samples:[{ jp:"私は学校へ行く。", tt:"Min mäktäpkä baram.", ru:"Я иду в школу.", en:"I go to school." }] },
-        { title:"他動詞 / Transitive", samples:[{ jp:"私はお茶を飲む。", tt:"Min çäy içäm.", ru:"Я пью чай.", en:"I drink tea." }] },
-        { title:"授与文 / Dative+Acc", samples:[{ jp:"私はあなたに本を与える。", tt:"Min siña kitap biräm.", ru:"Я даю тебе книгу.", en:"I give you a book." }] },
-        { title:"使役・結果 / Causative", samples:[{ jp:"あなたは私をうれしくする。", tt:"Sin mine bäxetle itäsen.", ru:"Ты делаешь меня счастливым.", en:"You make me happy." }] }
-    ];
-    const allPhrases = [
-        { jp:"私は学生です。", tt:"Min student.", ru:"Я студент.", en:"I am a student." },{ jp:"私は教師です。", tt:"Min uqıtuçı.", ru:"Я учитель.", en:"I am a teacher." },
-        { jp:"これは本です。", tt:"Bu kitap.", ru:"Это книга.", en:"This is a book." },{ jp:"今日は暑いです。", tt:"Börən cılı.", ru:"Сегодня жарко.", en:"Today is hot." },
-        { jp:"このスープは美味しいです。", tt:"Bu şulpa tämle.", ru:"Этот суп вкусный.", en:"This soup is tasty." },{ jp:"あの建物は大きいです。", tt:"Te bina zur.", ru:"То здание большое.", en:"That building is big." },
-        { jp:"私の仕事は難しいです。", tt:"Minem eşem çetin.", ru:"Моя работа трудная.", en:"My job is difficult." },{ jp:"タタール語は美しいです。", tt:"Tatar tele matur.", ru:"Татарский язык красивый.", en:"Tatar language is beautiful." },
-        { jp:"この街は古いです。", tt:"Bu şähär iske.", ru:"Этот город старый.", en:"This city is old." },{ jp:"ここは静かです。", tt:"Monda tınıç.", ru:"Здесь тихо.", en:"It's quiet here." },
-        { jp:"私は忙しいです。", tt:"Min mäşğül.", ru:"Я занят.", en:"I'm busy." },{ jp:"あなたは若いです。", tt:"Sin yäş.", ru:"Ты молод.", en:"You are young." },
-        { jp:"彼は親切です。", tt:"Ul yomşaq küñelle.", ru:"Он добрый.", en:"He is kind." },{ jp:"これは私のペンです。", tt:"Bu minem qäläm.", ru:"Это моя ручка.", en:"This is my pen." },
-        { jp:"私は学校へ行きます。", tt:"Min mäktäpkä baram.", ru:"Я иду в школу.", en:"I go to school." },{ jp:"彼は家へ帰ります。", tt:"Ul öygä qayta.", ru:"Он возвращается домой.", en:"He returns home." },
-        { jp:"私はモスクワへ行きました。", tt:"Min Məskəwgə bardım.", ru:"Я ездил в Москву.", en:"I went to Moscow." },{ jp:"私たちは図書館へ行きます。", tt:"Bez kitapxanäğa barabız.", ru:"Мы идём в библиотеку.", en:"We go to the library." },
-        { jp:"あなたはいつ来ますか？", tt:"Sin qaçan kiläsen?", ru:"Когда ты придёшь?", en:"When will you come?" },{ jp:"友達が私の家に来ます。", tt:"Dus minem öygä kilä.", ru:"Друг приходит ко мне домой.", en:"A friend comes to my house." },
-        { jp:"私は歩いて行きます。", tt:"Min cayaw baram.", ru:"Я иду пешком.", en:"I go on foot." },{ jp:"電車は駅に着きます。", tt:"Poyezd stantsiyägä citä.", ru:"Поезд прибывает на вокзал.", en:"The train arrives at the station." },
-        { jp:"私はパンを食べます。", tt:"Min ip içäm.", ru:"Я ем хлеб.", en:"I eat bread." },{ jp:"私は紅茶を飲みます。", tt:"Min çäy içäm.", ru:"Я пью чай.", en:"I drink tea." },
-        { jp:"彼女は果物を食べています。", tt:"Ul cilek aşıy.", ru:"Она ест фрукты.", en:"She is eating fruit." },{ jp:"私たちはホテルに泊まります。", tt:"Bez hotelda tuktíybız.", ru:"Мы останавливаемся в отеле.", en:"We stay at a hotel." },
-        { jp:"私は毎朝6時に起きます。", tt:"Min här irtä säğät 6-da toram.", ru:"Я встаю в 6 часов каждое утро.", en:"I wake up at 6 every morning." },{ jp:"子供たちは早く寝ます。", tt:"Balalar irta yoklıylar.", ru:"Дети ложатся спать рано.", en:"Children sleep early." },
-        { jp:"昨夜は良く眠れました。", tt:"Kiçä yaxşı yokladım.", ru:"Вчера я хорошо спал.", en:"Last night I slept well." },{ jp:"あなたは朝ごはんを食べましたか？", tt:"Sin irtänge aş aşadıñmı?", ru:"Ты позавтракал?", en:"Did you eat breakfast?" },
-        { jp:"私はテレビを見ます。", tt:"Min televizor küräm.", ru:"Я смотрю телевизор.", en:"I watch TV." },{ jp:"あなたは私の声が聞こえますか？", tt:"Sin mine tanışlıymı?", ru:"Ты слышишь мой голос?", en:"Do you hear my voice?" },
-        { jp:"彼は「こんにちは」と言いました。", tt:"Ul 'isänme' dide.", ru:"Он сказал «здравствуй».", en:"He said 'hello'." },{ jp:"私は日本語を話します。", tt:"Min yaponça söyläşäm.", ru:"Я говорю по-японски.", en:"I speak Japanese." },
-        { jp:"この本を読んでください。", tt:"Bu kitapnı uğığız.", ru:"Прочитайте эту книгу.", en:"Please read this book." },{ jp:"私は手紙を書いています。", tt:"Min xat yazam.", ru:"Я пишу письмо.", en:"I am writing a letter." },
-        { jp:"彼女は日記を書きます。", tt:"Ul könlek yaza.", ru:"Она пишет дневник.", en:"She writes a diary." },{ jp:"私は新聞を読みません。", tt:"Min gazeta uqımım.", ru:"Я не читаю газету.", en:"I don't read the newspaper." },
-        { jp:"分かりましたか？", tt:"Añladığızmı?", ru:"Вы поняли?", en:"Did you understand?" },{ jp:"あなたの言っていることが分かりません。", tt:"Min sezne añlamim.", ru:"Я вас не понимаю.", en:"I don't understand you." },
-        { jp:"私はあなたのことを考えています。", tt:"Min sinıñ turında uylım.", ru:"Я думаю о тебе.", en:"I'm thinking of you." },{ jp:"私は毎日勉強します。", tt:"Min kön sayın öyränäm.", ru:"Я занимаюсь каждый день.", en:"I study every day." },
-        { jp:"彼はサッカーをします。", tt:"Ul futbol uynıy.", ru:"Он играет в футбол.", en:"He plays soccer." },{ jp:"私はピアノを弾きます。", tt:"Min pianinoda uynıym.", ru:"Я играю на пианино.", en:"I play the piano." },
-        { jp:"何をしていますか？", tt:"Sin nişliseñ?", ru:"Что ты делаешь?", en:"What are you doing?" },{ jp:"音楽を聴くのが好きです。", tt:"Min muzıkı tıñlarğa yaratam.", ru:"Я люблю слушать музыку.", en:"I like listening to music." },
-        { jp:"私はロシア語を少し理解します。", tt:"Min rusça beraz añlıym.", ru:"Я немного понимаю русский.", en:"I understand a little Russian." },{ jp:"仕事が終わりました。", tt:"Eş tämam.", ru:"Работа закончена.", en:"The work is finished." },
-        { jp:"一緒に散歩しませんか？", tt:"Bergä sayırğa çıqayıq?", ru:"Пойдём гулять вместе?", en:"Shall we go for a walk together?" },{ jp:"お元気で。", tt:"Saw bulığız.", ru:"Будьте здоровы.", en:"Stay healthy." }
-    ];
-    const pronounsList = [
-        { name:"私 / I / Я / мин", forms:{ nom:{jp:"私",tt:"мин",ru:"я",en:"I"}, gen:{jp:"私の",tt:"минем",ru:"меня",en:"my/mine"}, acc:{jp:"私を",tt:"мине",ru:"меня",en:"me"}, dat:{jp:"私に",tt:"миңа",ru:"мне",en:"to me"}, abl:{jp:"私から/私で",tt:"миннән",ru:"от меня / мной",en:"from me / by me"} } },
-        { name:"あなた / you / ты / син", forms:{ nom:{jp:"あなた",tt:"син",ru:"ты",en:"you (sg)"}, gen:{jp:"あなたの",tt:"синең",ru:"тебя",en:"your"}, acc:{jp:"あなたを",tt:"сине",ru:"тебя",en:"you"}, dat:{jp:"あなたに",tt:"сиңа",ru:"тебе",en:"to you"}, abl:{jp:"あなたから/で",tt:"синнән",ru:"от тебя / тобой",en:"from you / by you"} } },
-        { name:"彼 / he / он / ул", forms:{ nom:{jp:"彼",tt:"ул",ru:"он",en:"he"}, gen:{jp:"彼の",tt:"аның",ru:"его",en:"his"}, acc:{jp:"彼を",tt:"аны",ru:"его",en:"him"}, dat:{jp:"彼に",tt:"аңа",ru:"ему",en:"to him"}, abl:{jp:"彼から/で",tt:"аннан",ru:"от него / им",en:"from him / by him"} } },
-        { name:"彼女 / she / она / ул", forms:{ nom:{jp:"彼女",tt:"ул",ru:"она",en:"she"}, gen:{jp:"彼女の",tt:"аның",ru:"её",en:"her"}, acc:{jp:"彼女を",tt:"аны",ru:"её",en:"her"}, dat:{jp:"彼女に",tt:"аңа",ru:"ей",en:"to her"}, abl:{jp:"彼女から/で",tt:"аннан",ru:"от неё / ею",en:"from her / by her"} } },
-        { name:"それ / it / оно / ул", forms:{ nom:{jp:"それ",tt:"ул",ru:"оно",en:"it"}, gen:{jp:"それの",tt:"аның",ru:"его",en:"its"}, acc:{jp:"それを",tt:"аны",ru:"его",en:"it"}, dat:{jp:"それに",tt:"аңа",ru:"ему",en:"to it"}, abl:{jp:"それから/で",tt:"аннан",ru:"от него / им",en:"from it / by it"} } },
-        { name:"私達 / we / мы / без", forms:{ nom:{jp:"私達",tt:"без",ru:"мы",en:"we"}, gen:{jp:"私達の",tt:"безнең",ru:"нас",en:"our"}, acc:{jp:"私達を",tt:"безне",ru:"нас",en:"us"}, dat:{jp:"私達に",tt:"безгә",ru:"нам",en:"to us"}, abl:{jp:"私達から/で",tt:"бездән",ru:"от нас / нами",en:"from us / by us"} } },
-        { name:"あなた達 / you (pl) / вы / сез", forms:{ nom:{jp:"あなた達",tt:"сез",ru:"вы",en:"you (pl)"}, gen:{jp:"あなた達の",tt:"сезнең",ru:"вас",en:"your (pl)"}, acc:{jp:"あなた達を",tt:"сезне",ru:"вас",en:"you (pl)"}, dat:{jp:"あなた達に",tt:"сезгә",ru:"вам",en:"to you (pl)"}, abl:{jp:"あなた達から/で",tt:"сездән",ru:"от вас / вами",en:"from you / by you (pl)"} } },
-        { name:"彼ら / they (m) / они / алар", forms:{ nom:{jp:"彼ら",tt:"алар",ru:"они",en:"they (m)"}, gen:{jp:"彼らの",tt:"аларның",ru:"их",en:"their"}, acc:{jp:"彼らを",tt:"аларны",ru:"их",en:"them"}, dat:{jp:"彼らに",tt:"аларга",ru:"им",en:"to them"}, abl:{jp:"彼らから/で",tt:"алардан",ru:"от них / ими",en:"from them / by them"} } },
-        { name:"彼女ら / they (f) / они / алар", forms:{ nom:{jp:"彼女ら",tt:"алар",ru:"они",en:"they (f)"}, gen:{jp:"彼女らの",tt:"аларның",ru:"их",en:"their"}, acc:{jp:"彼女らを",tt:"аларны",ru:"их",en:"them"}, dat:{jp:"彼女らに",tt:"аларга",ru:"им",en:"to them"}, abl:{jp:"彼女らから/で",tt:"алардан",ru:"от них / ими",en:"from them / by them"} } }
-    ];
+    // 代名詞表の編集可能ローマ字セル
+    function makePronounRomajiCell(jpText, id) {
+        const romSpan = makeEditableRomaji(jpText, id);
+        return `<td data-lang="jp" data-text="${jpText.replace(/"/g, '&quot;')}">${jpText} ${romSpan}</td>`;
+    }
 
-    // レンダリング関数
-    function updateUI() { const t=uiText[currentUiLang]; document.getElementById('appTitle').innerText=t.appTitle; document.getElementById('cardPatternsTitle').innerHTML=t.cardPatternsTitle; document.getElementById('cardPatternsDesc').innerText=t.cardPatternsDesc; document.getElementById('cardPhrasesTitle').innerHTML=t.cardPhrasesTitle; document.getElementById('cardPhrasesDesc').innerText=t.cardPhrasesDesc; document.getElementById('cardPronounsTitle').innerHTML=t.cardPronounsTitle; document.getElementById('cardPronounsDesc').innerText=t.cardPronounsDesc; document.getElementById('footerContact').innerText=t.footerContact; }
-    function setActiveLangButton(lang){ document.querySelectorAll('.lang-btn').forEach(btn=>{ if(btn.dataset.lang===lang) btn.classList.add('active'); else btn.classList.remove('active'); }); }
-    function attachCellSpeak(container){ container.querySelectorAll('td').forEach(cell=>{ const lang=cell.dataset.lang; const text=cell.dataset.text; if(lang && text) cell.onclick=()=>speakText(text,lang); }); }
-    function showPronounTable(pronoun){ const area=document.getElementById('pronounDetailArea'); const caseNames={nom:"Nominative (〜は/が)", gen:"Genitive (〜の)", acc:"Accusative (〜を)", dat:"Dative (〜に/へ)", abl:"Ablative (〜から/〜で)"}; let html='<div class="pronoun-table-container"><table><thead><tr><th>Case</th><th>日本語</th><th>Татарча</th><th>Русский</th><th>English</th></tr></thead><tbody>'; for(let [k,label] of Object.entries(caseNames)){ const f=pronoun.forms[k]; html+=`<tr><td>${label}</td><td data-lang="jp" data-text="${f.jp}">${formatJapanese(f.jp)}</td><td data-lang="tt" data-text="${f.tt}">${f.tt}</td><td data-lang="ru" data-text="${f.ru}">${f.ru}</td><td data-lang="en" data-text="${f.en}">${f.en}</td></tr>`; } html+='</tbody></table></div>'; area.innerHTML=html; attachCellSpeak(area); }
-    function showDetail(section){
-        const main=document.getElementById('mainView'), detail=document.getElementById('detailView');
-        main.style.display='none'; detail.style.display='block';
-        let html=`<button class="back-btn" id="backToMainBtn"><i class="fas fa-arrow-left"></i> ${uiText[currentUiLang].backBtn}</button><div class="detail-view">`;
-        if(section==='patterns'){
-            html+=`<h2>${uiText[currentUiLang].patternsHeader}</h2>`;
-            patternsData.forEach(p=>{ const s=p.samples[0]; html+=`<div class="pattern-card"><h3>${p.title}</h3><div class="lang-row"><div class="lang-label">JP</div><div class="lang-text" data-lang="jp" data-text="${s.jp}">${formatJapanese(s.jp)}</div></div><div class="lang-row"><div class="lang-label">TT</div><div class="lang-text" data-lang="tt" data-text="${s.tt}">${s.tt}</div></div><div class="lang-row"><div class="lang-label">RU</div><div class="lang-text" data-lang="ru" data-text="${s.ru}">${s.ru}</div></div><div class="lang-row"><div class="lang-label">EN</div><div class="lang-text" data-lang="en" data-text="${s.en}">${s.en}</div></div></div>`; });
-        } else if(section==='phrases'){
-            html+=`<h2>${uiText[currentUiLang].phrasesHeader}</h2>`;
-            allPhrases.forEach((ph,idx)=>{ html+=`<div class="phrase-card"><strong>${idx+1}.</strong><div class="lang-row"><div class="lang-label">JP</div><div class="lang-text" data-lang="jp" data-text="${ph.jp}">${formatJapanese(ph.jp)}</div></div><div class="lang-row"><div class="lang-label">TT</div><div class="lang-text" data-lang="tt" data-text="${ph.tt}">${ph.tt}</div></div><div class="lang-row"><div class="lang-label">RU</div><div class="lang-text" data-lang="ru" data-text="${ph.ru}">${ph.ru}</div></div><div class="lang-row"><div class="lang-label">EN</div><div class="lang-text" data-lang="en" data-text="${ph.en}">${ph.en}</div></div></div>`; });
-        } else if(section==='pronouns'){
-            html+=`<h2>${uiText[currentUiLang].cardPronounsTitle}</h2><div class="pronoun-grid" id="pronounButtonsGrid"></div><div id="pronounDetailArea" style="margin-top:24px;"></div>`;
-            detail.innerHTML=html;
-            const grid=document.getElementById('pronounButtonsGrid');
-            pronounsList.forEach(p=>{ const btn=document.createElement('button'); btn.className='pronoun-btn'; btn.innerText=p.name; btn.onclick=()=>showPronounTable(p); grid.appendChild(btn); });
-            if(pronounsList.length) showPronounTable(pronounsList[0]);
-            attachCellSpeak(detail);
-            document.getElementById('backToMainBtn').onclick=backHandler;
+    // 詳細画面描画
+    function showDetail(section) {
+        const main = document.getElementById('mainView');
+        const detail = document.getElementById('detailView');
+        main.style.display = 'none';
+        detail.style.display = 'block';
+        let html = `<button class="back-btn" id="backToMainBtn"><i class="fas fa-arrow-left"></i> ${uiText[currentUiLang].backBtn}</button><div class="detail-view">`;
+
+        if (section === 'patterns') {
+            html += `<h2>${uiText[currentUiLang].patternsHeader}</h2>`;
+            for (let p of patternsData) {
+                html += `<div class="pattern-card"><h3>${p.title}</h3>`;
+                html += renderLangRowWithEditableRomaji(p, 'jp', p.jp, p.id);
+                html += renderLangRowWithEditableRomaji(p, 'tt', p.tt, p.id+'_tt');
+                html += renderLangRowWithEditableRomaji(p, 'ru', p.ru, p.id+'_ru');
+                html += renderLangRowWithEditableRomaji(p, 'en', p.en, p.id+'_en');
+                html += `</div>`;
+            }
+        } else if (section === 'phrases') {
+            html += `<h2>${uiText[currentUiLang].phrasesHeader}</h2>`;
+            allPhrases.forEach((ph, idx) => {
+                html += `<div class="phrase-card"><strong>${idx+1}.</strong>`;
+                html += renderLangRowWithEditableRomaji(ph, 'jp', ph.jp, ph.id);
+                html += renderLangRowWithEditableRomaji(ph, 'tt', ph.tt, ph.id+'_tt');
+                html += renderLangRowWithEditableRomaji(ph, 'ru', ph.ru, ph.id+'_ru');
+                html += renderLangRowWithEditableRomaji(ph, 'en', ph.en, ph.id+'_en');
+                html += `</div>`;
+            });
+        } else if (section === 'pronouns') {
+            html += `<h2>${uiText[currentUiLang].cardPronounsTitle}</h2>`;
+            html += `<div class="pronoun-grid" id="pronounButtonsGrid"></div>`;
+            html += `<div id="pronounDetailArea" style="margin-top:24px;"></div>`;
+            detail.innerHTML = html;
+            const grid = document.getElementById('pronounButtonsGrid');
+            pronounsList.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'pronoun-btn';
+                btn.innerText = p.name;
+                btn.onclick = () => showPronounTable(p);
+                grid.appendChild(btn);
+            });
+            if (pronounsList.length) showPronounTable(pronounsList[0]);
+            // 発音は td の data-text で行う（編集ローマ字部分は発音しない）
+            attachPronunciation(detail);
+            document.getElementById('backToMainBtn').onclick = backHandler;
             return;
         }
-        detail.innerHTML=html;
-        detail.querySelectorAll('.lang-text').forEach(el=>{ const lang=el.dataset.lang, text=el.dataset.text; if(lang && text) el.onclick=()=>speakText(text,lang); });
-        document.getElementById('backToMainBtn').onclick=backHandler;
+
+        detail.innerHTML = html;
+        attachPronunciation(detail);
+        // contenteditable 要素の保存イベント
+        attachSaveEvents(detail);
+        document.getElementById('backToMainBtn').onclick = backHandler;
     }
-    function backHandler(){ document.getElementById('mainView').style.display='block'; document.getElementById('detailView').style.display='none'; window.speechSynthesis.cancel(); }
+
+    function showPronounTable(pronoun) {
+        const area = document.getElementById('pronounDetailArea');
+        const caseNames = { nom:"Nominative (〜は/が)", gen:"Genitive (〜の)", acc:"Accusative (〜を)", dat:"Dative (〜に/へ)", abl:"Ablative (〜から/〜で)" };
+        let html = `<div class="pronoun-table-container"><table><thead><tr><th>Case</th><th>日本語</th><th>Татарча</th><th>Русский</th><th>English</th></tr></thead><tbody>`;
+        for (let [caseKey, label] of Object.entries(caseNames)) {
+            const jpText = pronoun.forms[caseKey].jp;
+            const ttText = pronoun.tt[caseKey];
+            const ruText = pronoun.ru[caseKey];
+            const enText = pronoun.en[caseKey];
+            const romId = `${pronoun.id}_${caseKey}`;
+            html += `<tr>
+                <td>${label}</td>
+                ${makePronounRomajiCell(jpText, romId)}
+                <td data-lang="tt" data-text="${ttText.replace(/"/g, '&quot;')}">${ttText}</td>
+                <td data-lang="ru" data-text="${ruText.replace(/"/g, '&quot;')}">${ruText}</td>
+                <td data-lang="en" data-text="${enText.replace(/"/g, '&quot;')}">${enText}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div>`;
+        area.innerHTML = html;
+        attachPronunciation(area);
+        attachSaveEvents(area);
+    }
+
+    function attachPronunciation(container) {
+        container.querySelectorAll('[data-lang]').forEach(el => {
+            if (el.classList && el.classList.contains('romaji')) return; // ローマ字編集部分は発音させない
+            const lang = el.getAttribute('data-lang');
+            const text = el.getAttribute('data-text');
+            if (lang && text) {
+                el.onclick = (e) => { if (e.target === el || !e.target.closest('.romaji')) speakText(text, lang); };
+            }
+        });
+    }
+
+    function attachSaveEvents(container) {
+        container.querySelectorAll('.romaji[contenteditable="true"]').forEach(span => {
+            span.removeEventListener('blur', span._saveHandler);
+            const id = span.getAttribute('data-id');
+            const handler = () => { saveRomaji(id, span.innerText); };
+            span.addEventListener('blur', handler);
+            span._saveHandler = handler;
+        });
+    }
+
+    function backHandler() {
+        document.getElementById('mainView').style.display = 'block';
+        document.getElementById('detailView').style.display = 'none';
+        window.speechSynthesis.cancel();
+    }
+
+    function updateUI() { const t=uiText[currentUiLang]; document.getElementById('appTitle').innerText=t.appTitle; document.getElementById('cardPatternsTitle').innerHTML=t.cardPatternsTitle; document.getElementById('cardPatternsDesc').innerText=t.cardPatternsDesc; document.getElementById('cardPhrasesTitle').innerHTML=t.cardPhrasesTitle; document.getElementById('cardPhrasesDesc').innerText=t.cardPhrasesDesc; document.getElementById('cardPronounsTitle').innerHTML=t.cardPronounsTitle; document.getElementById('cardPronounsDesc').innerText=t.cardPronounsDesc; document.getElementById('footerContact').innerText=t.footerContact; }
+    function setActiveLangButton(lang){ document.querySelectorAll('.lang-btn').forEach(btn=>{ if(btn.dataset.lang===lang) btn.classList.add('active'); else btn.classList.remove('active'); }); }
 
     // 初期化
     document.addEventListener('DOMContentLoaded',()=>{
@@ -317,12 +409,7 @@
         const themeBtn=document.getElementById('themeToggleBtn');
         themeBtn.onclick=()=>{ document.body.classList.toggle('light'); localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark'); };
         if(localStorage.getItem('theme')==='light') document.body.classList.add('light'); else document.body.classList.add('dark');
-        // サービスワーカー
-        if('serviceWorker' in navigator){
-            navigator.serviceWorker.register('sw.js', { scope: '/' })
-                .then(reg=>console.log('SW registered', reg))
-                .catch(err=>console.error('SW failed', err));
-        }
+        if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js', { scope: '/' }).then(reg=>console.log('SW registered', reg)).catch(err=>console.error('SW failed', err)); }
     });
 </script>
 </body>
